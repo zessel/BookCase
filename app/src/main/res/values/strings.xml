@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">BookCase</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string-array name="titles_list">
+        <item>Moby Dick</item>
+        <item>Sometimes a Great Notion</item>
+        <item>Hamlet</item>
+        <item>The Woman in White</item>
+        <item>The Black Company</item>
+        <item>Dune</item>
+        <item>The Three Musketeers</item>
+        <item>To Kill a Mockingbird</item>
+        <item>Jurassic Park</item>
+        <item>Crime and Punishment</item>
+        <item>The Crying of Lot 49</item>
+        <item>Glengarry Glen Ross</item>
+    </string-array>
+
+</resources>
