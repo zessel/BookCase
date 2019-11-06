@@ -17,9 +17,11 @@ import android.widget.TextView;
  */
 public class BookDetailsFragment extends Fragment {
 
-    String title;
-    TextView textView;
-    public final static String TITLE_KEY = "title";
+    Book book;
+    TextView titleView;
+    TextView authorView;
+
+    public final static String BOOK_KEY = "title";
     public BookDetailsFragment() {
         // Required empty public constructor
     }
@@ -29,7 +31,7 @@ public class BookDetailsFragment extends Fragment {
         super.onCreate(savedInstanceState);
         Bundle bundle = getArguments();
         if (bundle != null)
-            title = bundle.getString(TITLE_KEY);
+            book = bundle.getParcelable(BOOK_KEY);
     }
 
     @Override
@@ -38,21 +40,23 @@ public class BookDetailsFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_book_details, container, false);
 
-        textView= view.findViewById(R.id.textView);
-        textView.setText(title);
+        titleView = view.findViewById(R.id.titleView);
+        //titleView.setText(book.getTitle());
+        authorView = view.findViewById(R.id.authorView);
+        //authorView.setText(book.getAuthor());
         return view;
     }
 
     public void changeTitle(String title)
     {
-        textView.setText(title);
+        titleView.setText(title);
     }
 
-    public static BookDetailsFragment newInstance(String title)
+    public static BookDetailsFragment newInstance(Book book)
     {
         BookDetailsFragment bookDetailsFragment = new BookDetailsFragment();
         Bundle bundle = new Bundle();
-        bundle.putString(TITLE_KEY, title);
+        bundle.putParcelable(BOOK_KEY, book);
         bookDetailsFragment.setArguments(bundle);
         return bookDetailsFragment;
     }

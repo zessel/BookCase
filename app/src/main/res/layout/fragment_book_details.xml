@@ -8,15 +8,30 @@
 
     <!-- TODO: Update blank fragment layout -->
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/titleView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="100dp"
+        android:gravity="center_horizontal"
         android:textAlignment="center"
-        android:gravity="center"
         android:textSize="36sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
 
+    <TextView
+        android:id="@+id/authorView"
+        android:layout_width="match_parent"
+        android:layout_height="25dp"
+        android:gravity="center_horizontal"
+        android:textAlignment="center"
+        android:textSize="12sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.14" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,7 +1,8 @@
 <resources>
     <string name="app_name">BookCase</string>
     <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="fullBookListAPI">https://kamorris.com/lab/audlib/booksearch.php</string>
+    <string name="bookSearchAPI">https://kamorris.com/lab/audlib/booksearch.php?search=</string>
     <string-array name="titles_list">
         <item>Moby Dick</item>
         <item>Sometimes a Great Notion</item>

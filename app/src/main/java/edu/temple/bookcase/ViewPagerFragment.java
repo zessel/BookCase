@@ -55,7 +55,7 @@ public class ViewPagerFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_view_pager, container, false);
         for (String s: titles)
         {
-            fragments.add(BookDetailsFragment.newInstance(s));
+            fragments.add(BookDetailsFragment.newInstance(new Book(1, "A", "B", 2, 3, "C")));
         }
         viewPager = view.findViewById(R.id.viewPager);
         viewPager.setAdapter(new MyFragmentAdapter(getFragmentManager()));
