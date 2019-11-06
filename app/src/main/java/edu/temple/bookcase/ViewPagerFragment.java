@@ -23,10 +23,11 @@ import java.util.ArrayList;
  */
 public class ViewPagerFragment extends Fragment {
 
-    public static final String TITLES_KEY = "titles";
+    public static final String BOOKS_KEY = "books";
     ViewPager viewPager;
     String[] titles;
     Context parent;
+    ArrayList<Book> books;
     ArrayList<BookDetailsFragment> fragments;
 
     public ViewPagerFragment() {
@@ -45,7 +46,7 @@ public class ViewPagerFragment extends Fragment {
         fragments = new ArrayList<>();
         Bundle bundle = getArguments();
         if (bundle != null)
-            titles = bundle.getStringArray(TITLES_KEY);
+            books = bundle.getParcelableArrayList(BOOKS_KEY);
     }
 
     @Override
@@ -53,7 +54,7 @@ public class ViewPagerFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_view_pager, container, false);
-        for (String s: titles)
+        for (int i = 0; i < books.size(); i++)
         {
             fragments.add(BookDetailsFragment.newInstance(new Book(1, "A", "B", 2, 3, "C")));
         }
@@ -63,11 +64,11 @@ public class ViewPagerFragment extends Fragment {
         return view;
     }
 
-    public static ViewPagerFragment newInstance(String[] titles)
+    public static ViewPagerFragment newInstance(ArrayList<Book> books)
     {
         ViewPagerFragment viewPagerFragment = new ViewPagerFragment();
         Bundle bundle = new Bundle();
-        bundle.putStringArray(TITLES_KEY, titles);
+        bundle.putParcelableArrayList(BOOKS_KEY, books);
         viewPagerFragment.setArguments(bundle);
         return viewPagerFragment;
     }

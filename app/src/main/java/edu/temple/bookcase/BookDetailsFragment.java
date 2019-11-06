@@ -20,6 +20,9 @@ public class BookDetailsFragment extends Fragment {
     Book book;
     TextView titleView;
     TextView authorView;
+    TextView durationView;
+    TextView publishedView;
+
 
     public final static String BOOK_KEY = "title";
     public BookDetailsFragment() {
@@ -41,15 +44,24 @@ public class BookDetailsFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_book_details, container, false);
 
         titleView = view.findViewById(R.id.titleView);
-        //titleView.setText(book.getTitle());
+        titleView.setText(book.getTitle());
         authorView = view.findViewById(R.id.authorView);
-        //authorView.setText(book.getAuthor());
+        authorView.setText(book.getAuthor());
+        durationView = view.findViewById(R.id.durationView);
+        durationView.setText(book.getDuration());
+        publishedView = view.findViewById(R.id.publishedView);
+        publishedView.setText(book.getPublished());
+
         return view;
     }
 
-    public void changeTitle(String title)
+    public void changeBook(Book book)
     {
-        titleView.setText(title);
+        this.book = book;
+        titleView.setText(book.getTitle());
+        authorView.setText(book.getAuthor());
+        durationView.setText(book.getDuration());
+        publishedView.setText(book.getPublished());
     }
 
     public static BookDetailsFragment newInstance(Book book)
@@ -60,5 +72,4 @@ public class BookDetailsFragment extends Fragment {
         bookDetailsFragment.setArguments(bundle);
         return bookDetailsFragment;
     }
-
 }

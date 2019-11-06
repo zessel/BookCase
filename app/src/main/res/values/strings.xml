@@ -3,6 +3,8 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="fullBookListAPI">https://kamorris.com/lab/audlib/booksearch.php</string>
     <string name="bookSearchAPI">https://kamorris.com/lab/audlib/booksearch.php?search=</string>
+    <string name="pages">Pages: </string>
+    <string name="published">Published: </string>
     <string-array name="titles_list">
         <item>Moby Dick</item>
         <item>Sometimes a Great Notion</item>

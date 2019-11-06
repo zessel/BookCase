@@ -2,8 +2,6 @@ package edu.temple.bookcase;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
 
 import android.os.Bundle;
 import android.os.Handler;
@@ -11,7 +9,6 @@ import android.os.Message;
 import android.util.Log;
 
 import org.json.JSONArray;
-import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -23,8 +20,9 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     ViewPagerFragment viewPagerFragment;
     BookListFragment bookListFragment;
     BookDetailsFragment bookDetailsFragment;
-    String[] titles;
+    ArrayList<String> titles;
     ArrayList<Book> books;
+    int booksArrayLength;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,25 +31,25 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         books = new ArrayList<>();
         initialBookSearch();
 
-        titles = getResources().getStringArray(R.array.titles_list);
+        Log.d("RESPONSEARRAYSIZE", "   " + booksArrayLength);
 
-        viewPagerFragment = ViewPagerFragment.newInstance(titles);
+        //titles = getResources().getStringArray(R.array.titles_list);
+
+        Log.d("in on start ", "books " + books.size());
+        while (titles == null);
+        Log.d("in on start", " titles " + titles.length);
+        viewPagerFragment = ViewPagerFragment.newInstance(books);
         bookListFragment = BookListFragment.newInstance(titles);
         bookDetailsFragment = new BookDetailsFragment();
 
         Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.frame1);
-        if (findViewById(R.id.frame2) == null)
-        {
-            if (fragment instanceof BookListFragment)
-            {
+        if (findViewById(R.id.frame2) == null) {
+            if (fragment instanceof BookListFragment) {
                 getSupportFragmentManager().beginTransaction().remove(fragment).commit();
             }
             getSupportFragmentManager().beginTransaction().add(R.id.frame1, viewPagerFragment).commit();
-        }
-        else
-        {
-            if (fragment instanceof ViewPagerFragment)
-            {
+        } else {
+            if (fragment instanceof ViewPagerFragment) {
                 getSupportFragmentManager().beginTransaction().remove(fragment).commit();
             }
             getSupportFragmentManager().beginTransaction().add(R.id.frame1, bookListFragment).commit();
@@ -64,12 +62,20 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
         @Override
         public boolean handleMessage(Message msg) {
+            Log.d("in handler", "  ZYX ");
+
 
             JSONArray responseArray = (JSONArray) msg.obj;
+            booksArrayLength = responseArray.length();
+            titles = new String[booksArrayLength];
+            Log.d("titlesinhandler", "   " + titles.length);
 
             try {
-                for (int i = 0; i < responseArray.length(); i++)
+                for (int i = 0; i < booksArrayLength; i++) {
                     books.add(new Book(responseArray.getJSONObject(i)));
+                    titles[i] = responseArray.getJSONObject(i).getString("title");
+                    Log.d("TESTING", " " + titles[i]);
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -84,14 +90,13 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             public void run(){
 
                 URL fullBookListURL;
-
                 try {
 
                     fullBookListURL = new URL(getResources().getString(R.string.fullBookListAPI));
+                    Log.d("Thread running before stream opened", " IJK  ");
 
-                    BufferedReader reader = new BufferedReader(
-                            new InputStreamReader(
-                                    fullBookListURL.openStream()));
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(fullBookListURL.openStream()));
+                    Log.d("Thread running stream opened", " EFGH  ");
 
                     String response = "", tmpResponse;
 
@@ -104,8 +109,11 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                     JSONArray bookArray = new JSONArray(response);
                     Message msg = Message.obtain();
                     msg.obj = bookArray;
+                    Log.d("Thread running and sending message", " ABCD  ");
+
                     bookResponseHandler.sendMessage(msg);
                 } catch (Exception e){
+                    Log.d("this borked", "borking");
                     e.printStackTrace();
                 }
             }
@@ -115,7 +123,10 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
     @Override
     public void bookSelected(String bookTitle) {
-        bookDetailsFragment.changeTitle(bookTitle);
+        for (int i = 0; i < booksArrayLength; i++) {
+            if (books.get(i).getTitle() == bookTitle)
+                bookDetailsFragment.changeBook(books.get(i));
+        }
     }
 
 
