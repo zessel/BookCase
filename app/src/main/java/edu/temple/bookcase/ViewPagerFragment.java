@@ -11,6 +11,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentStatePagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,6 +30,7 @@ public class ViewPagerFragment extends Fragment {
     Context parent;
     ArrayList<Book> books;
     ArrayList<BookDetailsFragment> fragments;
+    MyFragmentAdapter myFragmentAdapter;
 
     public ViewPagerFragment() {
         // Required empty public constructor
@@ -56,10 +58,11 @@ public class ViewPagerFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_view_pager, container, false);
         for (int i = 0; i < books.size(); i++)
         {
-            fragments.add(BookDetailsFragment.newInstance(new Book(1, "A", "B", 2, 3, "C")));
+            fragments.add(BookDetailsFragment.newInstance(books.get(i)));
         }
         viewPager = view.findViewById(R.id.viewPager);
-        viewPager.setAdapter(new MyFragmentAdapter(getFragmentManager()));
+        myFragmentAdapter = new MyFragmentAdapter(getFragmentManager());
+        viewPager.setAdapter(myFragmentAdapter);
 
         return view;
     }

@@ -7,6 +7,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 
 import org.json.JSONArray;
 
@@ -20,29 +23,62 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     ViewPagerFragment viewPagerFragment;
     BookListFragment bookListFragment;
     BookDetailsFragment bookDetailsFragment;
-    ArrayList<String> titles;
+    String[] titles;
     ArrayList<Book> books;
     int booksArrayLength;
+    Button button;
+    EditText editText;
+    String searchTerm;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        books = new ArrayList<>();
-        initialBookSearch();
+        button = findViewById(R.id.button);
+        editText = findViewById(R.id.searchText);
+        searchTerm = "";
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                searchTerm = editText.getText().toString();
+                bookSearch();
+            }
+        });
+        bookSearch();
+    }
 
-        Log.d("RESPONSEARRAYSIZE", "   " + booksArrayLength);
+    Handler bookResponseHandler = new Handler(new Handler.Callback() {
 
-        //titles = getResources().getStringArray(R.array.titles_list);
-
-        Log.d("in on start ", "books " + books.size());
-        while (titles == null);
-        Log.d("in on start", " titles " + titles.length);
-        viewPagerFragment = ViewPagerFragment.newInstance(books);
-        bookListFragment = BookListFragment.newInstance(titles);
-        bookDetailsFragment = new BookDetailsFragment();
+        @Override
+        public boolean handleMessage(Message msg) {
 
         Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.frame1);
+        MainActivity.this.books = books = new ArrayList<>();
+        JSONArray responseArray = (JSONArray) msg.obj;
+        booksArrayLength = responseArray.length();
+        titles = new String[booksArrayLength];
+        Log.d("TESTINGPRE", "" + books.toString());
+        Log.d("TESTINGPRE", "" + responseArray.toString());
+
+        try {
+            for (int i = 0; i < booksArrayLength; i++) {
+                books.add(new Book(responseArray.getJSONObject(i)));
+                titles[i] = responseArray.getJSONObject(i).getString("title");
+                Log.d("TESTING", "" + books.get(i).getTitle() + " | " + titles[i]);
+
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Log.d("TESTINGPOST", "" + books);
+        viewPagerFragment = ViewPagerFragment.newInstance(books);
+        bookListFragment = BookListFragment.newInstance(titles);
+        if (bookDetailsFragment == null)
+        {
+            bookDetailsFragment = BookDetailsFragment.newInstance(books.get(0));
+        }
+
         if (findViewById(R.id.frame2) == null) {
             if (fragment instanceof BookListFragment) {
                 getSupportFragmentManager().beginTransaction().remove(fragment).commit();
@@ -55,67 +91,42 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             getSupportFragmentManager().beginTransaction().add(R.id.frame1, bookListFragment).commit();
             getSupportFragmentManager().beginTransaction().add(R.id.frame2, bookDetailsFragment).commit();
         }
-
-    }
-
-    Handler bookResponseHandler = new Handler(new Handler.Callback() {
-
-        @Override
-        public boolean handleMessage(Message msg) {
-            Log.d("in handler", "  ZYX ");
-
-
-            JSONArray responseArray = (JSONArray) msg.obj;
-            booksArrayLength = responseArray.length();
-            titles = new String[booksArrayLength];
-            Log.d("titlesinhandler", "   " + titles.length);
-
-            try {
-                for (int i = 0; i < booksArrayLength; i++) {
-                    books.add(new Book(responseArray.getJSONObject(i)));
-                    titles[i] = responseArray.getJSONObject(i).getString("title");
-                    Log.d("TESTING", " " + titles[i]);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return false;
+        return false;
         }
     });
 
-    private void initialBookSearch()
+    private void bookSearch()
     {
         Thread t = new Thread(){
             @Override
             public void run(){
 
-                URL fullBookListURL;
-                try {
+            URL fullBookListURL;
+            try {
+                fullBookListURL = new URL(getResources().getString(R.string.bookSearchAPI)+ searchTerm);
+                Log.d("Thread running before stream opened", " IJK  ");
 
-                    fullBookListURL = new URL(getResources().getString(R.string.fullBookListAPI));
-                    Log.d("Thread running before stream opened", " IJK  ");
+                BufferedReader reader = new BufferedReader(new InputStreamReader(fullBookListURL.openStream()));
+                Log.d("Thread running stream opened", " EFGH  ");
 
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(fullBookListURL.openStream()));
-                    Log.d("Thread running stream opened", " EFGH  ");
+                String response = "", tmpResponse;
 
-                    String response = "", tmpResponse;
-
+                tmpResponse = reader.readLine();
+                while (tmpResponse != null) {
+                    response = response + tmpResponse;
                     tmpResponse = reader.readLine();
-                    while (tmpResponse != null) {
-                        response = response + tmpResponse;
-                        tmpResponse = reader.readLine();
-                    }
-
-                    JSONArray bookArray = new JSONArray(response);
-                    Message msg = Message.obtain();
-                    msg.obj = bookArray;
-                    Log.d("Thread running and sending message", " ABCD  ");
-
-                    bookResponseHandler.sendMessage(msg);
-                } catch (Exception e){
-                    Log.d("this borked", "borking");
-                    e.printStackTrace();
                 }
+
+                JSONArray bookArray = new JSONArray(response);
+                Message msg = Message.obtain();
+                msg.obj = bookArray;
+                Log.d("Thread running and sending message", " ABCD  " + bookArray.toString());
+
+                bookResponseHandler.sendMessage(msg);
+            } catch (Exception e){
+                Log.d("this borked", "borking");
+                e.printStackTrace();
+            }
             }
         };
         t.start();
@@ -128,7 +139,4 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                 bookDetailsFragment.changeBook(books.get(i));
         }
     }
-
-
-
 }

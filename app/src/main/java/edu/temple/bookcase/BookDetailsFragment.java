@@ -48,11 +48,16 @@ public class BookDetailsFragment extends Fragment {
         authorView = view.findViewById(R.id.authorView);
         authorView.setText(book.getAuthor());
         durationView = view.findViewById(R.id.durationView);
-        durationView.setText(book.getDuration());
+        durationView.setText(String.valueOf(book.getDuration()));
         publishedView = view.findViewById(R.id.publishedView);
-        publishedView.setText(book.getPublished());
+        publishedView.setText(String.valueOf(book.getPublished()));
 
         return view;
+    }
+
+    public Book getBook()
+    {
+        return book;
     }
 
     public void changeBook(Book book)
@@ -60,8 +65,8 @@ public class BookDetailsFragment extends Fragment {
         this.book = book;
         titleView.setText(book.getTitle());
         authorView.setText(book.getAuthor());
-        durationView.setText(book.getDuration());
-        publishedView.setText(book.getPublished());
+        durationView.setText(String.valueOf(book.getDuration()));
+        publishedView.setText(String.valueOf(book.getPublished()));
     }
 
     public static BookDetailsFragment newInstance(Book book)

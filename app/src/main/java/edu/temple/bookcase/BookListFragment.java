@@ -52,9 +52,6 @@ public class BookListFragment extends Fragment {
 
         ListView listView = (ListView) inflater.inflate(R.layout.fragment_book_list, container, false);
 
-
-        // It's context so I can do these next two lines, but I'm going to refactor this fragment to be less specific
-        //final String[] titles = parent.getResources().getStringArray(R.array.titles_list);
         listView.setAdapter(new ArrayAdapter(parent,android.R.layout.simple_list_item_1, titles));
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {

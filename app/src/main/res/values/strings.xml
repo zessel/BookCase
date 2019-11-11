@@ -5,6 +5,7 @@
     <string name="bookSearchAPI">https://kamorris.com/lab/audlib/booksearch.php?search=</string>
     <string name="pages">Pages: </string>
     <string name="published">Published: </string>
+    <string name="searchButton">Search</string>
     <string-array name="titles_list">
         <item>Moby Dick</item>
         <item>Sometimes a Great Notion</item>
