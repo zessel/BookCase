@@ -29,21 +29,14 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     Button button;
     EditText editText;
     String searchTerm;
+    Fragment fragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        button = findViewById(R.id.button);
+        fragment = getSupportFragmentManager().findFragmentById(R.id.frame1);
         editText = findViewById(R.id.searchText);
-        searchTerm = "";
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                searchTerm = editText.getText().toString();
-                bookSearch();
-            }
-        });
         bookSearch();
     }
 
@@ -57,21 +50,16 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         JSONArray responseArray = (JSONArray) msg.obj;
         booksArrayLength = responseArray.length();
         titles = new String[booksArrayLength];
-        Log.d("TESTINGPRE", "" + books.toString());
-        Log.d("TESTINGPRE", "" + responseArray.toString());
 
         try {
             for (int i = 0; i < booksArrayLength; i++) {
                 books.add(new Book(responseArray.getJSONObject(i)));
                 titles[i] = responseArray.getJSONObject(i).getString("title");
-                Log.d("TESTING", "" + books.get(i).getTitle() + " | " + titles[i]);
-
             }
 
         } catch (Exception e) {
             e.printStackTrace();
         }
-        Log.d("TESTINGPOST", "" + books);
         viewPagerFragment = ViewPagerFragment.newInstance(books);
         bookListFragment = BookListFragment.newInstance(titles);
         if (bookDetailsFragment == null)
@@ -101,6 +89,19 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             @Override
             public void run(){
 
+                button = findViewById(R.id.button);
+                button.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        searchTerm = editText.getText().toString();
+                        search(searchTerm);
+                        Log.d("QWERTY", "button clicked");
+                    }
+                });
+                search("");
+
+
+/*
             URL fullBookListURL;
             try {
                 fullBookListURL = new URL(getResources().getString(R.string.bookSearchAPI)+ searchTerm);
@@ -126,7 +127,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             } catch (Exception e){
                 Log.d("this borked", "borking");
                 e.printStackTrace();
-            }
+            }*/
             }
         };
         t.start();
@@ -137,6 +138,31 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         for (int i = 0; i < booksArrayLength; i++) {
             if (books.get(i).getTitle() == bookTitle)
                 bookDetailsFragment.changeBook(books.get(i));
+        }
+    }
+
+    private void search(String searchTerm) {
+        URL fullBookListURL;
+        try {
+            fullBookListURL = new URL(getResources().getString(R.string.bookSearchAPI)+ searchTerm);
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(fullBookListURL.openStream()));
+
+            String response = "", tmpResponse;
+
+            tmpResponse = reader.readLine();
+            while (tmpResponse != null) {
+                response = response + tmpResponse;
+                tmpResponse = reader.readLine();
+            }
+
+            JSONArray bookArray = new JSONArray(response);
+            Message msg = Message.obtain();
+            msg.obj = bookArray;
+            Log.d("Thread running and sending message", " ABCD  " + bookArray.toString());
+            bookResponseHandler.sendMessage(msg);
+        } catch (Exception e){
+            e.printStackTrace();
         }
     }
 }
