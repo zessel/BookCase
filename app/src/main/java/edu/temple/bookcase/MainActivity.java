@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
@@ -28,7 +27,6 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     int booksArrayLength;
     Button button;
     EditText editText;
-    String searchTerm;
     Fragment fragment;
 
     @Override
@@ -37,6 +35,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         setContentView(R.layout.activity_main);
         fragment = getSupportFragmentManager().findFragmentById(R.id.frame1);
         editText = findViewById(R.id.searchText);
+        button = findViewById(R.id.button);
         bookSearch();
     }
 
@@ -45,60 +44,79 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         @Override
         public boolean handleMessage(Message msg) {
 
-        Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.frame1);
-        MainActivity.this.books = books = new ArrayList<>();
-        JSONArray responseArray = (JSONArray) msg.obj;
-        booksArrayLength = responseArray.length();
-        titles = new String[booksArrayLength];
+            Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.frame1);
+            JSONArray responseArray;
+            MainActivity.this.books = books = new ArrayList<>();
 
-        try {
-            for (int i = 0; i < booksArrayLength; i++) {
-                books.add(new Book(responseArray.getJSONObject(i)));
-                titles[i] = responseArray.getJSONObject(i).getString("title");
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        viewPagerFragment = ViewPagerFragment.newInstance(books);
-        bookListFragment = BookListFragment.newInstance(titles);
-        if (bookDetailsFragment == null)
-        {
-            bookDetailsFragment = BookDetailsFragment.newInstance(books.get(0));
-        }
-
-        if (findViewById(R.id.frame2) == null) {
-            if (fragment instanceof BookListFragment) {
-                getSupportFragmentManager().beginTransaction().remove(fragment).commit();
-            }
-            getSupportFragmentManager().beginTransaction().add(R.id.frame1, viewPagerFragment).commit();
-        } else {
             if (fragment instanceof ViewPagerFragment) {
-                getSupportFragmentManager().beginTransaction().remove(fragment).commit();
+                responseArray = ((ViewPagerFragment) fragment).getBooksAsJSON();
             }
-            getSupportFragmentManager().beginTransaction().add(R.id.frame1, bookListFragment).commit();
-            getSupportFragmentManager().beginTransaction().add(R.id.frame2, bookDetailsFragment).commit();
-        }
-        return false;
-        }
-    });
+            else if (fragment instanceof BookListFragment){
+                responseArray = ((BookListFragment) fragment).getBooksAsJSON();
+            }
+            else {
+                responseArray = (JSONArray) msg.obj;
+            }
+            Log.d("HANDLER-Retrieved books", "" + responseArray.toString());
+            booksArrayLength = responseArray.length();
+            titles = new String[booksArrayLength];
+            try {
+                for (int i = 0; i < booksArrayLength; i++) {
+                    if (responseArray.getJSONObject(i).has("coverURL")) {
+                        Log.d("CHECKING", ""+ responseArray.getJSONObject(i).getString("coverURL"));
+                    }
+                    books.add(new Book(responseArray.getJSONObject(i)));
+                    Log.d("HANDLER", "" + responseArray.getJSONObject(i).toString());
+                    titles[i] = responseArray.getJSONObject(i).getString("title");
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            viewPagerFragment = ViewPagerFragment.newInstance(books);
+            bookListFragment = BookListFragment.newInstance(books);
+            bookDetailsFragment = BookDetailsFragment.newInstance(new Book(0,"","",0,0,""));
+
+            if (findViewById(R.id.frame2) == null) {
+                if (fragment instanceof BookListFragment) {
+                    getSupportFragmentManager().beginTransaction().remove(fragment).commit();
+                }
+                getSupportFragmentManager().beginTransaction().add(R.id.frame1, viewPagerFragment).commit();
+            } else {
+                if (fragment instanceof ViewPagerFragment) {
+                getSupportFragmentManager().beginTransaction().remove(fragment).commit();
+                }
+                getSupportFragmentManager().beginTransaction().add(R.id.frame1, bookListFragment).commit();
+                getSupportFragmentManager().beginTransaction().add(R.id.frame2, bookDetailsFragment).commit();
+            }
+            return false;
+            }
+        });
 
     private void bookSearch()
     {
         Thread t = new Thread(){
             @Override
             public void run(){
-
-                button = findViewById(R.id.button);
-                button.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        searchTerm = editText.getText().toString();
-                        search(searchTerm);
-                        Log.d("QWERTY", "button clicked");
-                    }
-                });
-                search("");
+/*                Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.frame1);
+                if (fragment instanceof ViewPagerFragment) {
+                    JSONArray bookArray = ((ViewPagerFragment) fragment).getBooksAsJSON();
+                    Message msg = Message.obtain();
+                    msg.obj = bookArray;
+                    bookResponseHandler.sendMessage(msg);
+                    Log.d("SentFromViewFrag", "" + bookArray.toString());
+                }
+                else if (fragment instanceof BookListFragment){
+                    JSONArray bookArray = ((BookListFragment) fragment).getBooksAsJSON();
+                    Message msg = Message.obtain();
+                    msg.obj = bookArray;
+                    bookResponseHandler.sendMessage(msg);
+                    Log.d("SentFromListFrag", "" + bookArray.toString());
+                }
+                else {*/
+                    search("");
+//                }
 
 
 /*

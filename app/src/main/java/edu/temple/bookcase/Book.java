@@ -2,6 +2,7 @@ package edu.temple.bookcase;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -77,6 +78,28 @@ public class Book implements Parcelable {
 
     public void setCoverURL(String coverURL) {
         this.coverURL = coverURL;
+    }
+
+    public JSONObject toJSON(){
+
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("book_id", getId());
+            jsonObject.put("title", getTitle());
+            jsonObject.put("author", getAuthor());
+            jsonObject.put("duration", getDuration());
+            jsonObject.put("published", getPublished());
+            jsonObject.put("coverURL", getCoverURL());
+            if (jsonObject.has("coverURL")) {
+                Log.d("BOOK", ""+ jsonObject.getString("coverURL"));
+            }
+            return jsonObject;
+        } catch (JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            return null;
+        }
+
     }
 
     @Override

@@ -7,12 +7,17 @@ import android.os.Bundle;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+
+import org.json.JSONArray;
+
+import java.util.ArrayList;
 
 
 /**
@@ -22,7 +27,8 @@ public class BookListFragment extends Fragment {
 
     // Instead of having this be GetBookInterface I made it Context
     Context parent;
-    public final static String TITLE_KEY = "titles";
+    public final static String BOOKS_KEY = "books";
+    ArrayList<Book> books;
     String[] titles;
 
     public BookListFragment() {
@@ -42,8 +48,13 @@ public class BookListFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Bundle bundle = getArguments();
-        if (bundle != null)
-            titles = bundle.getStringArray(TITLE_KEY);
+        if (bundle != null) {
+            books = bundle.getParcelableArrayList(BOOKS_KEY);
+            titles = new String[books.size()];
+            for (int i = 0; i < books.size(); i++) {
+                titles[i] = books.get(i).getTitle();
+            }
+        }
     }
 
     @Override
@@ -63,11 +74,20 @@ public class BookListFragment extends Fragment {
         return listView;
     }
 
-    public static BookListFragment newInstance(String[] titles)
+    public JSONArray getBooksAsJSON() {
+        JSONArray jsonArray = new JSONArray();
+        for (int i = 0; i < books.size(); i++){
+            jsonArray.put(books.get(i).toJSON());
+        }
+        Log.d("SentFromListFrag", "" + jsonArray.toString());
+        return jsonArray;
+    }
+
+    public static BookListFragment newInstance(ArrayList<Book> books)
     {
         BookListFragment bookListFragment = new BookListFragment();
         Bundle bundle = new Bundle();
-        bundle.putStringArray(TITLE_KEY, titles);
+        bundle.putParcelableArrayList(BOOKS_KEY, books);
         bookListFragment.setArguments(bundle);
         return bookListFragment;
     }

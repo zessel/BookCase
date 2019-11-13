@@ -16,6 +16,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import org.json.JSONArray;
+
 import java.util.ArrayList;
 
 
@@ -74,6 +76,15 @@ public class ViewPagerFragment extends Fragment {
         bundle.putParcelableArrayList(BOOKS_KEY, books);
         viewPagerFragment.setArguments(bundle);
         return viewPagerFragment;
+    }
+
+    public JSONArray getBooksAsJSON() {
+        JSONArray jsonArray = new JSONArray();
+        for (int i = 0; i < books.size(); i++){
+            jsonArray.put(books.get(i).toJSON());
+        }
+        Log.d("SentFromViewFrag", "" + jsonArray.toString());
+        return jsonArray;
     }
 
     class MyFragmentAdapter extends FragmentStatePagerAdapter
