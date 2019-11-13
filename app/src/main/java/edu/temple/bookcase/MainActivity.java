@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
@@ -36,7 +37,19 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         fragment = getSupportFragmentManager().findFragmentById(R.id.frame1);
         editText = findViewById(R.id.searchText);
         button = findViewById(R.id.button);
-        bookSearch();
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Thread bookSearch = new Thread(){
+                    @Override
+                    public void run(){
+
+                        bookSearchResponseHandler.sendMessage(search(editText.getText().toString()));
+                    }
+                };bookSearch.start();
+            }
+        });
+        initialBookSearch();
     }
 
     Handler bookResponseHandler = new Handler(new Handler.Callback() {
@@ -49,52 +62,56 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             MainActivity.this.books = books = new ArrayList<>();
 
             if (fragment instanceof ViewPagerFragment) {
-                responseArray = ((ViewPagerFragment) fragment).getBooksAsJSON();
+                MainActivity.this.books = books = ((ViewPagerFragment) fragment).getBooksAsArrayList();
             }
             else if (fragment instanceof BookListFragment){
-                responseArray = ((BookListFragment) fragment).getBooksAsJSON();
+                MainActivity.this.books = books = ((BookListFragment) fragment).getBooksAsArrayList();
             }
             else {
                 responseArray = (JSONArray) msg.obj;
-            }
-            Log.d("HANDLER-Retrieved books", "" + responseArray.toString());
-            booksArrayLength = responseArray.length();
-            titles = new String[booksArrayLength];
-            try {
-                for (int i = 0; i < booksArrayLength; i++) {
-                    if (responseArray.getJSONObject(i).has("coverURL")) {
-                        Log.d("CHECKING", ""+ responseArray.getJSONObject(i).getString("coverURL"));
+
+                Log.d("HANDLER-Retrieved books", "" + responseArray.toString());
+                booksArrayLength = responseArray.length();
+                titles = new String[booksArrayLength];
+                try {
+                    for (int i = 0; i < booksArrayLength; i++) {
+                        if (responseArray.getJSONObject(i).has("coverURL")) {
+                            Log.d("CHECKING", "" + responseArray.getJSONObject(i).getString("coverURL"));
+                        }
+                        books.add(new Book(responseArray.getJSONObject(i)));
+                        Log.d("HANDLER", "" + responseArray.getJSONObject(i).toString());
+                        titles[i] = responseArray.getJSONObject(i).getString("title");
                     }
-                    books.add(new Book(responseArray.getJSONObject(i)));
-                    Log.d("HANDLER", "" + responseArray.getJSONObject(i).toString());
-                    titles[i] = responseArray.getJSONObject(i).getString("title");
+
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-
-            } catch (Exception e) {
-                e.printStackTrace();
             }
-
-            viewPagerFragment = ViewPagerFragment.newInstance(books);
-            bookListFragment = BookListFragment.newInstance(books);
-            bookDetailsFragment = BookDetailsFragment.newInstance(new Book(0,"","",0,0,""));
+            MainActivity.this.viewPagerFragment = ViewPagerFragment.newInstance(books);
+            MainActivity.this.bookListFragment = BookListFragment.newInstance(books);
+            MainActivity.this.bookDetailsFragment = BookDetailsFragment.newInstance(new Book(0,"","",0,0,""));
 
             if (findViewById(R.id.frame2) == null) {
                 if (fragment instanceof BookListFragment) {
                     getSupportFragmentManager().beginTransaction().remove(fragment).commit();
                 }
-                getSupportFragmentManager().beginTransaction().add(R.id.frame1, viewPagerFragment).commit();
+                getSupportFragmentManager().beginTransaction().add(R.id.frame1, MainActivity.this.viewPagerFragment).commit();
             } else {
                 if (fragment instanceof ViewPagerFragment) {
                 getSupportFragmentManager().beginTransaction().remove(fragment).commit();
                 }
-                getSupportFragmentManager().beginTransaction().add(R.id.frame1, bookListFragment).commit();
-                getSupportFragmentManager().beginTransaction().add(R.id.frame2, bookDetailsFragment).commit();
+                fragment = getSupportFragmentManager().findFragmentById(R.id.frame2);
+                if (fragment != null){
+                    getSupportFragmentManager().beginTransaction().remove(fragment).commit();
+                }
+                getSupportFragmentManager().beginTransaction().add(R.id.frame1, MainActivity.this.bookListFragment).commit();
+                getSupportFragmentManager().beginTransaction().add(R.id.frame2, MainActivity.this.bookDetailsFragment).commit();
             }
             return false;
             }
         });
 
-    private void bookSearch()
+    private void initialBookSearch()
     {
         Thread t = new Thread(){
             @Override
@@ -115,7 +132,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                     Log.d("SentFromListFrag", "" + bookArray.toString());
                 }
                 else {*/
-                    search("");
+                    bookResponseHandler.sendMessage(search(""));
 //                }
 
 
@@ -151,15 +168,39 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         t.start();
     }
 
-    @Override
+    Handler bookSearchResponseHandler = new Handler(new Handler.Callback() {
+
+        @Override
+        public boolean handleMessage(Message msg) {
+            JSONArray responseArray;
+            responseArray = (JSONArray) msg.obj;
+            booksArrayLength = responseArray.length();
+            titles = new String[booksArrayLength];
+            books = new ArrayList<Book>();
+            try {
+                for (int i = 0; i < booksArrayLength; i++) {
+                    if (responseArray.getJSONObject(i).has("coverURL")) {
+                    }
+                    books.add(new Book(responseArray.getJSONObject(i)));
+                    titles[i] = responseArray.getJSONObject(i).getString("title");
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            return false;
+        }
+    });
+            @Override
     public void bookSelected(String bookTitle) {
         for (int i = 0; i < booksArrayLength; i++) {
             if (books.get(i).getTitle() == bookTitle)
-                bookDetailsFragment.changeBook(books.get(i));
+                MainActivity.this.bookDetailsFragment.changeBook(books.get(i));
         }
     }
 
-    private void search(String searchTerm) {
+    private Message search(String searchTerm) {
         URL fullBookListURL;
         try {
             fullBookListURL = new URL(getResources().getString(R.string.bookSearchAPI)+ searchTerm);
@@ -178,9 +219,10 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             Message msg = Message.obtain();
             msg.obj = bookArray;
             Log.d("Thread running and sending message", " ABCD  " + bookArray.toString());
-            bookResponseHandler.sendMessage(msg);
+            return msg;
         } catch (Exception e){
             e.printStackTrace();
+            return null;
         }
     }
 }

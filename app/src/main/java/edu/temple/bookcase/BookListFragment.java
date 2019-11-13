@@ -74,7 +74,10 @@ public class BookListFragment extends Fragment {
         return listView;
     }
 
-    public JSONArray getBooksAsJSON() {
+    public ArrayList<Book> getBooksAsArrayList(){
+        return books;
+    }
+/*    public JSONArray getBooksAsJSON() {
         JSONArray jsonArray = new JSONArray();
         for (int i = 0; i < books.size(); i++){
             jsonArray.put(books.get(i).toJSON());
@@ -82,7 +85,7 @@ public class BookListFragment extends Fragment {
         Log.d("SentFromListFrag", "" + jsonArray.toString());
         return jsonArray;
     }
-
+*/
     public static BookListFragment newInstance(ArrayList<Book> books)
     {
         BookListFragment bookListFragment = new BookListFragment();
