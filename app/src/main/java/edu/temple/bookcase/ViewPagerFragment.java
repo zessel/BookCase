@@ -60,13 +60,24 @@ public class ViewPagerFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_view_pager, container, false);
         for (int i = 0; i < books.size(); i++)
         {
-            fragments.add(BookDetailsFragment.newInstance(books.get(i)));
+            this.fragments.add(BookDetailsFragment.newInstance(books.get(i)));
         }
         viewPager = view.findViewById(R.id.viewPager);
         myFragmentAdapter = new MyFragmentAdapter(getFragmentManager());
         viewPager.setAdapter(myFragmentAdapter);
 
         return view;
+    }
+
+    public void updateBooks(ArrayList books){
+        this.books = books;
+        this.fragments.clear();
+        for (int i = 0; i < books.size(); i++)
+        {
+            this.fragments.add(BookDetailsFragment.newInstance(this.books.get(i)));
+        }
+        Log.d("UPDATE", "fargs.size() " + this.fragments.size() + " adapter.getCount "+ viewPager.getAdapter().getCount());
+        viewPager.getAdapter().notifyDataSetChanged();
     }
 
     public static ViewPagerFragment newInstance(ArrayList<Book> books)
@@ -103,6 +114,12 @@ public class ViewPagerFragment extends Fragment {
             return fragments.get(position);
         }
 
+        @Override
+        public int getItemPosition(Object object) {
+            // Causes adapter to reload all Fragments when
+            // notifyDataSetChanged is called
+            return POSITION_NONE;
+        }
         @Override
         public int getCount() {
             return fragments.size();

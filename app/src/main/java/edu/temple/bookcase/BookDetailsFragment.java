@@ -9,7 +9,11 @@ import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.squareup.picasso.Picasso;
 
 
 /**
@@ -22,6 +26,7 @@ public class BookDetailsFragment extends Fragment {
     TextView authorView;
     TextView durationView;
     TextView publishedView;
+    ImageView coverView;
 
 
     public final static String BOOK_KEY = "title";
@@ -51,7 +56,9 @@ public class BookDetailsFragment extends Fragment {
         durationView.setText(String.valueOf(book.getDuration()));
         publishedView = view.findViewById(R.id.publishedView);
         publishedView.setText(String.valueOf(book.getPublished()));
-
+        coverView = view.findViewById(R.id.imageView);
+        if (!book.getCoverURL().isEmpty())
+            Picasso.get().load(book.getCoverURL()).into(coverView);
         return view;
     }
 
@@ -67,6 +74,7 @@ public class BookDetailsFragment extends Fragment {
         authorView.setText(book.getAuthor());
         durationView.setText(String.valueOf(book.getDuration()));
         publishedView.setText(String.valueOf(book.getPublished()));
+        Picasso.get().load(book.getCoverURL()).into(coverView);
     }
 
     public static BookDetailsFragment newInstance(Book book)

@@ -8,6 +8,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
+import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 
@@ -176,7 +177,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             responseArray = (JSONArray) msg.obj;
             booksArrayLength = responseArray.length();
             titles = new String[booksArrayLength];
-            books = new ArrayList<Book>();
+            books.clear();
             try {
                 for (int i = 0; i < booksArrayLength; i++) {
                     if (responseArray.getJSONObject(i).has("coverURL")) {
@@ -188,16 +189,21 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
+            Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.frame1);
+            Log.d("BLAHBLAH", "" + fragment.toString());
+            if (fragment instanceof BookListFragment)
+                ((BookListFragment)fragment).updateBooks(books);
+            if (fragment instanceof ViewPagerFragment)
+                ((ViewPagerFragment)fragment).updateBooks(books);
             return false;
         }
     });
             @Override
-    public void bookSelected(String bookTitle) {
-        for (int i = 0; i < booksArrayLength; i++) {
-            if (books.get(i).getTitle() == bookTitle)
-                MainActivity.this.bookDetailsFragment.changeBook(books.get(i));
-        }
+    public void bookSelected(Book book) {
+        //for (int i = 0; i < booksArrayLength; i++) {
+           // if (books.get(i).getTitle() == bookTitle)
+                MainActivity.this.bookDetailsFragment.changeBook(book);
+        //}
     }
 
     private Message search(String searchTerm) {
