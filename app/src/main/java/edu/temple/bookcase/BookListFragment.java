@@ -4,23 +4,18 @@ package edu.temple.bookcase;
 import android.content.Context;
 import android.os.Bundle;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
 
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
-
-import org.json.JSONArray;
-
 import java.util.ArrayList;
 
 
@@ -55,10 +50,6 @@ public class BookListFragment extends Fragment {
         Bundle bundle = getArguments();
         if (bundle != null) {
             books = bundle.getParcelableArrayList(BOOKS_KEY);
- /*           titles = new String[books.size()];
-            for (int i = 0; i < books.size(); i++) {
-                titles[i] = books.get(i).getTitle();
-            }*/
         }
     }
 
@@ -68,7 +59,6 @@ public class BookListFragment extends Fragment {
 
         listView = (ListView) inflater.inflate(R.layout.fragment_book_list, container, false);
 
-        //listView.setAdapter(new ArrayAdapter(parent,android.R.layout.simple_list_item_1, titles));
         listView.setAdapter(new BookListFragmentAdapter());
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -93,15 +83,7 @@ public class BookListFragment extends Fragment {
     public ArrayList<Book> getBooksAsArrayList(){
         return books;
     }
-/*    public JSONArray getBooksAsJSON() {
-        JSONArray jsonArray = new JSONArray();
-        for (int i = 0; i < books.size(); i++){
-            jsonArray.put(books.get(i).toJSON());
-        }
-        Log.d("SentFromListFrag", "" + jsonArray.toString());
-        return jsonArray;
-    }
-*/
+
     public static BookListFragment newInstance(ArrayList<Book> books)
     {
         BookListFragment bookListFragment = new BookListFragment();
@@ -144,6 +126,7 @@ public class BookListFragment extends Fragment {
 
             textView.setText(books.get(position).getTitle());
             textView.setTextSize(24);
+            textView.setGravity(Gravity.CENTER);
             return textView;
         }
     }

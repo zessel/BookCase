@@ -9,7 +9,6 @@ import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -60,11 +59,6 @@ public class BookDetailsFragment extends Fragment {
         if (!book.getCoverURL().isEmpty())
             Picasso.get().load(book.getCoverURL()).into(coverView);
         return view;
-    }
-
-    public Book getBook()
-    {
-        return book;
     }
 
     public void changeBook(Book book)

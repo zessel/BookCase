@@ -8,7 +8,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
-import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 
@@ -117,53 +116,8 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         Thread t = new Thread(){
             @Override
             public void run(){
-/*                Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.frame1);
-                if (fragment instanceof ViewPagerFragment) {
-                    JSONArray bookArray = ((ViewPagerFragment) fragment).getBooksAsJSON();
-                    Message msg = Message.obtain();
-                    msg.obj = bookArray;
-                    bookResponseHandler.sendMessage(msg);
-                    Log.d("SentFromViewFrag", "" + bookArray.toString());
-                }
-                else if (fragment instanceof BookListFragment){
-                    JSONArray bookArray = ((BookListFragment) fragment).getBooksAsJSON();
-                    Message msg = Message.obtain();
-                    msg.obj = bookArray;
-                    bookResponseHandler.sendMessage(msg);
-                    Log.d("SentFromListFrag", "" + bookArray.toString());
-                }
-                else {*/
+
                     bookResponseHandler.sendMessage(search(""));
-//                }
-
-
-/*
-            URL fullBookListURL;
-            try {
-                fullBookListURL = new URL(getResources().getString(R.string.bookSearchAPI)+ searchTerm);
-                Log.d("Thread running before stream opened", " IJK  ");
-
-                BufferedReader reader = new BufferedReader(new InputStreamReader(fullBookListURL.openStream()));
-                Log.d("Thread running stream opened", " EFGH  ");
-
-                String response = "", tmpResponse;
-
-                tmpResponse = reader.readLine();
-                while (tmpResponse != null) {
-                    response = response + tmpResponse;
-                    tmpResponse = reader.readLine();
-                }
-
-                JSONArray bookArray = new JSONArray(response);
-                Message msg = Message.obtain();
-                msg.obj = bookArray;
-                Log.d("Thread running and sending message", " ABCD  " + bookArray.toString());
-
-                bookResponseHandler.sendMessage(msg);
-            } catch (Exception e){
-                Log.d("this borked", "borking");
-                e.printStackTrace();
-            }*/
             }
         };
         t.start();
@@ -200,10 +154,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     });
             @Override
     public void bookSelected(Book book) {
-        //for (int i = 0; i < booksArrayLength; i++) {
-           // if (books.get(i).getTitle() == bookTitle)
                 MainActivity.this.bookDetailsFragment.changeBook(book);
-        //}
     }
 
     private Message search(String searchTerm) {

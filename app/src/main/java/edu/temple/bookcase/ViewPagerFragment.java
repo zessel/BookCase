@@ -92,7 +92,8 @@ public class ViewPagerFragment extends Fragment {
     public ArrayList<Book> getBooksAsArrayList(){
         return books;
     }
-/*    public JSONArray getBooksAsJSON() {
+
+    public JSONArray getBooksAsJSON() {
         JSONArray jsonArray = new JSONArray();
         for (int i = 0; i < books.size(); i++){
             jsonArray.put(books.get(i).toJSON());
@@ -100,7 +101,7 @@ public class ViewPagerFragment extends Fragment {
         Log.d("SentFromViewFrag", "" + jsonArray.toString());
         return jsonArray;
     }
-*/
+
     class MyFragmentAdapter extends FragmentStatePagerAdapter
     {
 
