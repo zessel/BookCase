@@ -3,13 +3,19 @@ package edu.temple.bookcase;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 
 import org.json.JSONArray;
 
@@ -18,22 +24,61 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity implements BookListFragment.GetBookInterface{
+import edu.temple.audiobookplayer.AudiobookService;
+
+public class MainActivity extends AppCompatActivity implements BookListFragment.GetBookInterface,
+        BookDetailsFragment.PlayButtonInterface, PlayerFragment.PlayerFragmentInterface {
 
     ViewPagerFragment viewPagerFragment;
     BookListFragment bookListFragment;
     BookDetailsFragment bookDetailsFragment;
+    PlayerFragment playerFragment;
     String[] titles;
     ArrayList<Book> books;
     int booksArrayLength;
     Button button;
     EditText editText;
     Fragment fragment;
+    FrameLayout player;
+    AudiobookService.MediaControlBinder binder;
+    ServiceConnection serviceConnection;
+    boolean connected;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        player = findViewById(R.id.playframe);
+        player.setVisibility(View.GONE);
+
+        fragment = getSupportFragmentManager().findFragmentById(R.id.playframe);
+        if (!(fragment instanceof PlayerFragment)){
+            playerFragment = new PlayerFragment();
+            getSupportFragmentManager().beginTransaction().add(R.id.playframe, playerFragment).commit();
+        }
+        else {
+            playerFragment = (PlayerFragment) fragment;
+            if (!playerFragment.stopped) {
+                player.setVisibility(View.VISIBLE);
+            }
+        }
+        Intent intent = new Intent(this, AudiobookService.class);
+        serviceConnection = new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName className, IBinder service){
+                connected = true;
+                binder = (AudiobookService.MediaControlBinder) service;
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName arg0){
+                connected = false;
+                binder = null;
+            }
+        };
+
+        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
         fragment = getSupportFragmentManager().findFragmentById(R.id.frame1);
         editText = findViewById(R.id.searchText);
         button = findViewById(R.id.button);
@@ -43,13 +88,19 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                 Thread bookSearch = new Thread(){
                     @Override
                     public void run(){
-
                         bookSearchResponseHandler.sendMessage(search(editText.getText().toString()));
                     }
                 };bookSearch.start();
             }
         });
         initialBookSearch();
+    }
+
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+        if (!binder.isPlaying())
+            unbindService(serviceConnection);
     }
 
     Handler bookResponseHandler = new Handler(new Handler.Callback() {
@@ -181,5 +232,30 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             e.printStackTrace();
             return null;
         }
+    }
+
+    @Override
+    public void playButtonClicked(Book book) {
+        binder.play(book.getId());
+        player.setVisibility(View.VISIBLE);
+        playerFragment.updatePlayer(book.getTitle());
+        binder.setProgressHandler(playerFragment.progressHandler);
+    }
+
+    @Override
+    public void userMovedSeekBar(int progress) {
+        if (connected)
+        binder.seekTo(progress);
+    }
+
+    @Override
+    public void playPauseClicked() {
+        binder.pause();
+    }
+
+    @Override
+    public void stopClicked() {
+        binder.stop();
+        player.setVisibility(View.GONE);
     }
 }

@@ -3,7 +3,7 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="fullBookListAPI">https://kamorris.com/lab/audlib/booksearch.php</string>
     <string name="bookSearchAPI">https://kamorris.com/lab/audlib/booksearch.php?search=</string>
-    <string name="pages">Pages: </string>
+    <string name="Duration">Duration: </string>
     <string name="published">Published: </string>
     <string name="searchButton">Search</string>
     <string-array name="titles_list">
@@ -20,5 +20,8 @@
         <item>The Crying of Lot 49</item>
         <item>Glengarry Glen Ross</item>
     </string-array>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 
 </resources>

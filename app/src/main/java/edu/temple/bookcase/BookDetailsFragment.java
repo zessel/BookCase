@@ -1,6 +1,7 @@
 package edu.temple.bookcase;
 
 
+import android.content.Context;
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
@@ -9,6 +10,7 @@ import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -20,6 +22,7 @@ import com.squareup.picasso.Picasso;
  */
 public class BookDetailsFragment extends Fragment {
 
+    Context parent;
     Book book;
     TextView titleView;
     TextView authorView;
@@ -31,6 +34,15 @@ public class BookDetailsFragment extends Fragment {
     public final static String BOOK_KEY = "title";
     public BookDetailsFragment() {
         // Required empty public constructor
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof PlayButtonInterface)
+            parent = context;
+        else
+            throw new RuntimeException("Didn't implement BookDetailsFragment's interface");
     }
 
     @Override
@@ -58,6 +70,13 @@ public class BookDetailsFragment extends Fragment {
         coverView = view.findViewById(R.id.imageView);
         if (!book.getCoverURL().isEmpty())
             Picasso.get().load(book.getCoverURL()).into(coverView);
+
+        ((Button) view.findViewById(R.id.playbutton)).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ((PlayButtonInterface) BookDetailsFragment.this.parent).playButtonClicked(book);
+            }
+        });
         return view;
     }
 
@@ -78,5 +97,10 @@ public class BookDetailsFragment extends Fragment {
         bundle.putParcelable(BOOK_KEY, book);
         bookDetailsFragment.setArguments(bundle);
         return bookDetailsFragment;
+    }
+
+    interface PlayButtonInterface
+    {
+        void playButtonClicked(Book book);
     }
 }

@@ -50,14 +50,21 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:text="@string/pages"
-            android:gravity="center_vertical|end"/>
+            android:gravity="center_vertical|end"
+            android:text="@string/Duration" />
         <TextView
             android:id="@+id/durationView"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="center_vertical|start"/>
+
+        <Button
+            android:id="@+id/playbutton"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/ic_play_arrow_black_24dp" />
 
         <TextView
             android:id="@+id/textView3"
