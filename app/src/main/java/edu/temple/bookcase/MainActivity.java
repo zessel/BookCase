@@ -29,6 +29,7 @@ import edu.temple.audiobookplayer.AudiobookService;
 public class MainActivity extends AppCompatActivity implements BookListFragment.GetBookInterface,
         BookDetailsFragment.PlayButtonInterface, PlayerFragment.PlayerFragmentInterface {
 
+    final String BINDER_KEY = "binder";
     ViewPagerFragment viewPagerFragment;
     BookListFragment bookListFragment;
     BookDetailsFragment bookDetailsFragment;
@@ -42,7 +43,10 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     FrameLayout player;
     AudiobookService.MediaControlBinder binder;
     ServiceConnection serviceConnection;
+    Intent intent;
     boolean connected;
+    int progress;
+    String playingTitle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,18 +56,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         player = findViewById(R.id.playframe);
         player.setVisibility(View.GONE);
 
-        fragment = getSupportFragmentManager().findFragmentById(R.id.playframe);
-        if (!(fragment instanceof PlayerFragment)){
-            playerFragment = new PlayerFragment();
-            getSupportFragmentManager().beginTransaction().add(R.id.playframe, playerFragment).commit();
-        }
-        else {
-            playerFragment = (PlayerFragment) fragment;
-            if (!playerFragment.stopped) {
-                player.setVisibility(View.VISIBLE);
-            }
-        }
-        Intent intent = new Intent(this, AudiobookService.class);
+        intent = new Intent(this, AudiobookService.class);
         serviceConnection = new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName className, IBinder service){
@@ -78,7 +71,40 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             }
         };
 
-        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+        if (savedInstanceState != null) {
+            binder = (AudiobookService.MediaControlBinder) savedInstanceState.getBinder(BINDER_KEY);
+            binder.setProgressHandler(progressHandler);
+            progress = savedInstanceState.getInt("progress");
+            playingTitle = savedInstanceState.getString("now playing");
+/*
+            playerFragment.progress = savedInstanceState.getInt("progress");
+            playerFragment.stopped = savedInstanceState.getBoolean("connected");
+            playerFragment.paused = savedInstanceState.getBoolean("paused");
+            binder.setProgressHandler(playerFragment.progressHandler);
+
+ //           Log.d("Hash original", "" + savedInstanceState.getInt("int"));
+ //           Log.d("Hash new", "" + playerFragment.hashCode());
+
+ */
+        }
+        else {
+            startService(intent);
+            bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+        }
+
+        fragment = getSupportFragmentManager().findFragmentById(R.id.playframe);
+        if (!(fragment instanceof PlayerFragment)){
+            playerFragment = new PlayerFragment();
+            getSupportFragmentManager().beginTransaction().add(R.id.playframe, playerFragment).commit();
+        }
+        else {
+            playerFragment = (PlayerFragment) fragment;
+            if (!playerFragment.stopped) {
+                player.setVisibility(View.VISIBLE);
+            }
+            binder.setProgressHandler(progressHandler);
+            //    Log.d("TESTING", " " +playerFragment.progress + " " + playerFragment.textView.toString());
+        }
         fragment = getSupportFragmentManager().findFragmentById(R.id.frame1);
         editText = findViewById(R.id.searchText);
         button = findViewById(R.id.button);
@@ -99,8 +125,22 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     @Override
     public void onDestroy(){
         super.onDestroy();
-        if (!binder.isPlaying())
-            unbindService(serviceConnection);
+        if (!binder.isPlaying()) {
+            if (connected == true)
+                unbindService(serviceConnection);
+            stopService(intent);
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        savedInstanceState.putBinder(BINDER_KEY, binder);
+        savedInstanceState.putInt("int", playerFragment.hashCode());
+        savedInstanceState.putInt("progress", playerFragment.progress);
+        savedInstanceState.putString("now playing", playerFragment.title);
+        savedInstanceState.putBoolean("connected", playerFragment.stopped);
+        savedInstanceState.putBoolean("paused", playerFragment.paused);
+        super.onSaveInstanceState(savedInstanceState);
     }
 
     Handler bookResponseHandler = new Handler(new Handler.Callback() {
@@ -234,12 +274,26 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         }
     }
 
+    Handler progressHandler = new Handler(new Handler.Callback() {
+
+        @Override
+        public boolean handleMessage(Message msg) {
+            AudiobookService.BookProgress bookProgress = (AudiobookService.BookProgress) msg.obj;
+            if (!playerFragment.paused) {
+                playerFragment.progress = bookProgress.getProgress();
+                playerFragment.updateSeekBar(bookProgress.getProgress());
+                Log.d("PLAYING ", "" + bookProgress.getProgress());
+            }
+            return true;}
+    });
+
     @Override
     public void playButtonClicked(Book book) {
         binder.play(book.getId());
         player.setVisibility(View.VISIBLE);
         playerFragment.updatePlayer(book.getTitle());
-        binder.setProgressHandler(playerFragment.progressHandler);
+        playerFragment.seekBar.setMax(book.getDuration());
+        binder.setProgressHandler(progressHandler);
     }
 
     @Override
@@ -257,5 +311,13 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     public void stopClicked() {
         binder.stop();
         player.setVisibility(View.GONE);
+    }
+
+    @Override
+    public void fragmentCreated() {
+        if (progress > 0) {
+            playerFragment.updatePlayer(playingTitle);
+            playerFragment.progress = progress;
+        }
     }
 }

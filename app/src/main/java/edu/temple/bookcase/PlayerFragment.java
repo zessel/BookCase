@@ -4,6 +4,7 @@ package edu.temple.bookcase;
 import android.content.Context;
 import android.os.Bundle;
 
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import android.os.Handler;
@@ -26,6 +27,7 @@ public class PlayerFragment extends Fragment {
     Context parent;
     String title;
     int progress;
+    int duration;
     SeekBar seekBar;
     TextView textView;
     Button pausePlayButton;
@@ -45,7 +47,6 @@ public class PlayerFragment extends Fragment {
             throw new RuntimeException("Didn't implement PlayerFragment's interface");
     }
 
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -55,8 +56,9 @@ public class PlayerFragment extends Fragment {
         seekBar = view.findViewById(R.id.seekBar);
         textView = view.findViewById(R.id.playerTitleTextView);
         pausePlayButton = view.findViewById(R.id.pauseplay);
-        title = "";
-        progress = 0;
+        //title = "";
+        //progress = 0;
+        stopped = true;
         seekBar.setProgress(progress);
 
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -100,20 +102,23 @@ public class PlayerFragment extends Fragment {
                 }
             }
         });
+        ((PlayerFragmentInterface)parent).fragmentCreated();
         return view;
     }
 
-    Handler progressHandler = new Handler(new Handler.Callback() {
+ /*   Handler progressHandler = new Handler(new Handler.Callback() {
 
         @Override
         public boolean handleMessage(Message msg) {
             AudiobookService.BookProgress bookProgress = (AudiobookService.BookProgress) msg.obj;
-            if (!paused)
+            if (!paused) {
                 progress = bookProgress.getProgress();
+                Log.d("PLAYING ", "" + progress);
+            }
             seekBar.setProgress(progress);
             return true;}
     });
-
+*/
     public void updatePlayer (String title){
         this.title = title;
         textView.setText("Now Playing - " + title);
@@ -121,9 +126,14 @@ public class PlayerFragment extends Fragment {
         stopped = false;
     }
 
+    public void updateSeekBar (int progress){
+        seekBar.setProgress(progress);
+    }
+
     interface PlayerFragmentInterface{
         void userMovedSeekBar(int progress);
         void playPauseClicked();
         void stopClicked();
+        void fragmentCreated();
     }
 }
