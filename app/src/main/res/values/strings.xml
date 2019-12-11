@@ -3,6 +3,8 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="fullBookListAPI">https://kamorris.com/lab/audlib/booksearch.php</string>
     <string name="bookSearchAPI">https://kamorris.com/lab/audlib/booksearch.php?search=</string>
+    <string name="bookDownload">https://kamorris.com/lab/audlib/download.php?id=</string>
+    <string name="audioBookDir">/AudioBooks</string>
     <string name="Duration">Duration: </string>
     <string name="published">Published: </string>
     <string name="searchButton">Search</string>

@@ -60,6 +60,13 @@
             android:gravity="center_vertical|start"/>
 
         <Button
+            android:id="@+id/downloadButton"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@android:drawable/stat_sys_download" />
+
+        <Button
             android:id="@+id/playbutton"
             android:layout_width="0dp"
             android:layout_height="match_parent"

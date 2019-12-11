@@ -16,6 +16,8 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
+import java.io.File;
+
 
 /**
  * A simple {@link Fragment} subclass.
@@ -29,6 +31,10 @@ public class BookDetailsFragment extends Fragment {
     TextView durationView;
     TextView publishedView;
     ImageView coverView;
+    Button downloadButton;
+    boolean downloaded;
+    String filePath;
+    File audioFile;
 
 
     public final static String BOOK_KEY = "title";
@@ -39,7 +45,7 @@ public class BookDetailsFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof PlayButtonInterface)
+        if (context instanceof BookDetailsFragmentInterface)
             parent = context;
         else
             throw new RuntimeException("Didn't implement BookDetailsFragment's interface");
@@ -59,6 +65,11 @@ public class BookDetailsFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_book_details, container, false);
 
+        filePath = parent.getExternalFilesDir(null).toString() +
+                getResources().getString(R.string.audioBookDir) + "/" + book.getTitle() + ".mp3";
+        filePath = filePath.replace(" ", "");
+        audioFile = new File(filePath);
+
         titleView = view.findViewById(R.id.titleView);
         titleView.setText(book.getTitle());
         authorView = view.findViewById(R.id.authorView);
@@ -74,10 +85,45 @@ public class BookDetailsFragment extends Fragment {
         ((Button) view.findViewById(R.id.playbutton)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((PlayButtonInterface) BookDetailsFragment.this.parent).playButtonClicked(book);
+                ((BookDetailsFragmentInterface) BookDetailsFragment.this.parent).playButtonClicked(book);
+            }
+        });
+
+        downloadButton = view.findViewById(R.id.downloadButton);
+        refreshDownload();
+        downloadButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!audioFile.exists()) {
+                    ((BookDetailsFragmentInterface) BookDetailsFragment.this.parent).downloadButtonClicked(book);
+                    refreshDownload();
+                    downloadButton.setBackgroundResource(R.drawable.ic_delete_forever_black_24dp);
+                }
+                else {
+                    audioFile.delete();
+                    refreshDownload();
+                }
             }
         });
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        refreshDownload();
+    }
+
+    public void refreshDownload()
+    {
+        if (audioFile.exists()) {
+            downloadButton.setBackgroundResource(R.drawable.ic_delete_forever_black_24dp);
+            downloaded = true;
+        }
+        else {
+            downloadButton.setBackgroundResource((R.drawable.ic_cloud_download_black_24dp));
+            downloaded = false;
+        }
     }
 
     public void changeBook(Book book)
@@ -99,8 +145,9 @@ public class BookDetailsFragment extends Fragment {
         return bookDetailsFragment;
     }
 
-    interface PlayButtonInterface
+    interface BookDetailsFragmentInterface
     {
         void playButtonClicked(Book book);
+        void downloadButtonClicked(Book book);
     }
 }

@@ -7,6 +7,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -20,16 +21,27 @@ import android.widget.FrameLayout;
 import org.json.JSONArray;
 
 import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.Set;
 
 import edu.temple.audiobookplayer.AudiobookService;
 
 public class MainActivity extends AppCompatActivity implements BookListFragment.GetBookInterface,
-        BookDetailsFragment.PlayButtonInterface, PlayerFragment.PlayerFragmentInterface {
+        BookDetailsFragment.BookDetailsFragmentInterface, PlayerFragment.PlayerFragmentInterface {
 
     final String BINDER_KEY = "binder";
+    final String CURRENTBOOK_KEY = "current book";
+    final String ISFILE_KEY = "isfile";
+    final String SEARCH_KEY = "search";
     ViewPagerFragment viewPagerFragment;
     BookListFragment bookListFragment;
     BookDetailsFragment bookDetailsFragment;
@@ -47,11 +59,16 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     boolean connected;
     int progress;
     String playingTitle;
+    File stateData;
+    String searchTerm;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        searchTerm = sharedPref.getString(SEARCH_KEY, "");
 
         player = findViewById(R.id.playframe);
         player.setVisibility(View.GONE);
@@ -111,10 +128,11 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                searchTerm = editText.getText().toString();
                 Thread bookSearch = new Thread(){
                     @Override
                     public void run(){
-                        bookSearchResponseHandler.sendMessage(search(editText.getText().toString()));
+                        bookSearchResponseHandler.sendMessage(search(searchTerm));
                     }
                 };bookSearch.start();
             }
@@ -125,11 +143,31 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     @Override
     public void onDestroy(){
         super.onDestroy();
-        if (!binder.isPlaying()) {
+        stateData = new File (getFilesDir().toString(), "StateData");
+        if (!stateData.exists()) {
+            try {
+                stateData.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putString(SEARCH_KEY, searchTerm);
+
+        if (binder != null && binder.isPlaying()) {
+            editor.putInt(playerFragment.title, progress);
+        }
+        if (binder != null && !binder.isPlaying()) {
             if (connected == true)
                 unbindService(serviceConnection);
             stopService(intent);
         }
+
+        editor.apply();
+        editor.commit();
+
     }
 
     @Override
@@ -208,7 +246,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             @Override
             public void run(){
 
-                    bookResponseHandler.sendMessage(search(""));
+                    bookResponseHandler.sendMessage(search(searchTerm));
             }
         };
         t.start();
@@ -281,6 +319,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             AudiobookService.BookProgress bookProgress = (AudiobookService.BookProgress) msg.obj;
             if (!playerFragment.paused) {
                 playerFragment.progress = bookProgress.getProgress();
+                progress = bookProgress.getProgress();
                 playerFragment.updateSeekBar(bookProgress.getProgress());
                 Log.d("PLAYING ", "" + bookProgress.getProgress());
             }
@@ -289,12 +328,118 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
     @Override
     public void playButtonClicked(Book book) {
-        binder.play(book.getId());
+
+        String filePath = getExternalFilesDir(null).toString() +
+                getResources().getString(R.string.audioBookDir) + "/" + book.getTitle() + ".mp3";
+        filePath = filePath.replace(" ", "");
+        File audioFile = new File(filePath);
+
+        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+
+        if (binder.isPlaying()) {
+            editor.putInt(playerFragment.title, progress);
+            editor.apply();
+        }
+
+        progress = sharedPref.getInt(book.getTitle(), 0);
+        Log.d("PROGRESS VALUE play", book.getTitle() + " " + progress);
+
+        if (audioFile.exists()) {
+            binder.play(audioFile, progress);
+            editor.putString(CURRENTBOOK_KEY, book.getTitle());
+            editor.putInt(ISFILE_KEY, 1);
+        }
+        else {
+            binder.play(book.getId(), progress);
+            editor.putString(CURRENTBOOK_KEY, String.valueOf(book.getId()));
+            editor.putInt(ISFILE_KEY, 0);
+        }
+        editor.apply();
+        editor.commit();
         player.setVisibility(View.VISIBLE);
         playerFragment.updatePlayer(book.getTitle());
         playerFragment.seekBar.setMax(book.getDuration());
         binder.setProgressHandler(progressHandler);
     }
+
+    @Override
+    public void downloadButtonClicked(Book book) {
+        final int id = book.getId();
+        final String title = book.getTitle();
+        Thread t = new Thread(){
+            @Override
+            public void run(){
+                downloadHandler.sendMessage(download(id, title));
+            }
+        };
+        t.start();
+    }
+
+    private Message download(int id, String title) {
+        Log.d("downloadASDF", "made it to download");
+        URL downloadURL;
+
+        String filePath = getExternalFilesDir(null).toString() +
+                getResources().getString(R.string.audioBookDir) + "/" + title + ".mp3";
+        filePath = filePath.replace(" ", "");
+        Log.d("filePath", filePath);
+        File outputFile = new File(filePath);
+        outputFile.mkdirs();
+
+        try {
+            downloadURL = new URL(getResources().getString(R.string.bookDownload)+ id);
+            URLConnection connection = downloadURL.openConnection();
+            int connectionLength = connection.getContentLength();
+            Log.d("downloadASDF", downloadURL.toString());
+            Log.d("downloadASDF", "opened connection " + connectionLength);
+
+
+            DataInputStream inputStream = new DataInputStream(downloadURL.openStream());
+
+            byte[] buffer = new byte[connectionLength];
+            inputStream.readFully(buffer);
+            inputStream.close();
+
+            Log.d("downloadASDF", "a" + outputFile.getAbsolutePath());
+
+            if (!outputFile.exists())
+                outputFile.createNewFile();
+            DataOutputStream outputStream = new DataOutputStream(new FileOutputStream(outputFile));
+            outputStream.write(buffer);
+            outputStream.flush();
+            outputStream.close();
+
+        } catch (MalformedURLException ex) {
+            ex.printStackTrace();
+            Log.d("Malformed URL", "qwert");
+            return null;
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            Log.d("IOException", "werty");
+            return null;
+        }
+
+        Message msg = Message.obtain();
+        msg.what = 1;
+
+        return msg;
+    }
+
+    Handler downloadHandler = new Handler(new Handler.Callback() {
+
+        @Override
+        public boolean handleMessage(Message msg) {
+            Log.d("handlerASDF", "made it to handler");
+            if (msg == null) {
+                //TODO worry about this later
+            }
+            else {
+                MainActivity.this.bookDetailsFragment.downloaded = true;
+//                MainActivity.this.bookDetailsFragment.refreshDownload();
+            }
+            return true;}
+    });
 
     @Override
     public void userMovedSeekBar(int progress) {
@@ -304,13 +449,28 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
     @Override
     public void playPauseClicked() {
+        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putInt(playerFragment.title, progress);
+        Log.d("PROGRESS VALUE pause", playerFragment.title + " " + progress);
+
+        editor.apply();
+        editor.commit();
         binder.pause();
+        Log.d("PROGRESS VALUE post pause", playerFragment.title + " " + progress);
+
     }
 
     @Override
     public void stopClicked() {
+        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putInt(playerFragment.title, 0);
+        editor.apply();
+        editor.commit();
         binder.stop();
         player.setVisibility(View.GONE);
+
     }
 
     @Override
